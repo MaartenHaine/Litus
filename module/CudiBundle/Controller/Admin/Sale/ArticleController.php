@@ -277,7 +277,22 @@ class ArticleController extends \CudiBundle\Component\Controller\ActionControlle
     public function deleteAction()
     {
         $this->initAjax();
+    
+        $saleArticle = $this->getSaleArticleEntity();
+        if ($saleArticle === null) {
+            return new ViewModel();
+        }
+        
+        $bookings = $this->getEntityManager()
+            ->getRepository('CudiBundle\Entity\Sale\Booking')
+            ->findAllActiveByArticleAndPeriod($saleArticle, $this->getActiveStockPeriodEntity());
 
+        $idsCancelled = array();
+        foreach ($bookings as $booking) {
+            $booking->setStatus('canceled', $this->getEntityManager());
+            $idsCancelled[] = $booking->getId();
+        }
+        
         $saleArticle = $this->getSaleArticleEntity();
         if ($saleArticle === null) {
             return new ViewModel();
